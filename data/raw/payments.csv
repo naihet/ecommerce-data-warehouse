@@ -1,0 +1,3 @@
+| payment_id | order_id | payment_status | payment_date |
+| ---------- | -------- | -------------- | ------------ |
+| PAY0001    | O0001    | Paid           | 2026-08-01   |

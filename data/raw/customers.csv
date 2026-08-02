@@ -1,0 +1,3 @@
+| customer_id | customer_name | gender | province | signup_date |
+| ----------- | ------------- | ------ | -------- | ----------- |
+| C0001       | Somchai       | Male   | Bangkok  | 2025-01-10  |
