@@ -92,10 +92,149 @@ def generate_products(n=100):
 
     )
 
+def generate_orders(n=2000):
+
+    rows = []
+
+    for i in range(1, n + 1):
+
+        rows.append({
+
+            "order_id": f"O{i:06}",
+
+            "customer_id":
+                f"C{random.randint(1,500):05}",
+
+            "order_date":
+                fake.date_between(
+                    start_date="-2y",
+                    end_date="today"
+                ),
+
+            "status":
+                random.choice([
+                    "Completed",
+                    "Pending",
+                    "Cancelled"
+                ])
+
+        })
+
+
+    pd.DataFrame(rows).to_csv(
+
+        f"{OUTPUT_DIR}/orders.csv",
+
+        index=False
+
+    )
+
+def generate_order_items(n=5000):
+
+    rows = []
+
+    for i in range(1, n + 1):
+
+        quantity = random.randint(1,5)
+
+        price = round(
+            random.uniform(10,500),
+            2
+        )
+
+        rows.append({
+
+            "order_item_id":
+                f"OI{i:06}",
+
+            "order_id":
+                f"O{random.randint(1,2000):06}",
+
+            "product_id":
+                f"P{random.randint(1,100):05}",
+
+            "quantity":
+                quantity,
+
+            "unit_price":
+                price,
+
+            "total_price":
+                round(
+                    quantity * price,
+                    2
+                )
+
+        })
+
+
+    pd.DataFrame(rows).to_csv(
+
+        f"{OUTPUT_DIR}/order_items.csv",
+
+        index=False
+
+    )
+
+def generate_payments(n=2000):
+
+    rows = []
+
+    for i in range(1, n + 1):
+
+        rows.append({
+
+            "payment_id":
+                f"PAY{i:06}",
+
+            "order_id":
+                f"O{i:06}",
+
+            "payment_method":
+                random.choice([
+                    "Credit Card",
+                    "Bank Transfer",
+                    "PromptPay",
+                    "Cash"
+                ]),
+
+            "payment_status":
+                random.choice([
+                    "Paid",
+                    "Pending",
+                    "Failed"
+                ]),
+
+            "payment_date":
+                fake.date_between(
+                    start_date="-2y",
+                    end_date="today"
+                )
+
+        })
+
+
+    pd.DataFrame(rows).to_csv(
+
+        f"{OUTPUT_DIR}/payments.csv",
+
+        index=False
+
+    )
+
 #------------------------------------------------------------------
 
 if __name__ == "__main__":
 
     generate_customers()
 
-    print("Customers generated.")
+    generate_products()
+
+    generate_orders()
+
+    generate_order_items()
+
+    generate_payments()
+
+
+    print("All data generated.")
