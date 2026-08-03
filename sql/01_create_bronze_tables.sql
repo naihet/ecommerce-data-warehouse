@@ -1,4 +1,4 @@
-CREATE TABLE staging.customers (
+CREATE TABLE bronze.customers (
 
     customer_id VARCHAR(20),
 
@@ -14,7 +14,7 @@ CREATE TABLE staging.customers (
 
 
 
-CREATE TABLE staging.products (
+CREATE TABLE bronze.products (
 
     product_id VARCHAR(20),
 
@@ -28,7 +28,7 @@ CREATE TABLE staging.products (
 
 
 
-CREATE TABLE staging.orders (
+CREATE TABLE bronze.orders (
 
     order_id VARCHAR(20),
 
@@ -42,7 +42,7 @@ CREATE TABLE staging.orders (
 
 
 
-CREATE TABLE staging.order_items (
+CREATE TABLE bronze.order_items (
 
     order_item_id VARCHAR(20),
 
@@ -60,7 +60,7 @@ CREATE TABLE staging.order_items (
 
 
 
-CREATE TABLE staging.payments (
+CREATE TABLE bronze.payments (
 
     payment_id VARCHAR(20),
 
