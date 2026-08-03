@@ -17,7 +17,7 @@ CREATE TABLE silver.orders (
     order_id VARCHAR(10) PRIMARY KEY,
     customer_id VARCHAR(10),
     order_date DATE,
-    order_status VARCHAR(50)
+    status VARCHAR(50)
 );
 
 CREATE TABLE silver.order_items (
