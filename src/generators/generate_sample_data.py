@@ -2,10 +2,15 @@ from faker import Faker
 import pandas as pd
 import random
 import os
+from pathlib import Path
 
 fake = Faker()
 
-OUTPUT_DIR = "data/raw"
+BASE_DIR = Path(__file__).resolve().parents[2]
+
+OUTPUT_DIR = BASE_DIR / "data" / "raw"
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -47,7 +52,7 @@ def generate_customers(n=500):
 
     pd.DataFrame(rows).to_csv(
 
-        f"{OUTPUT_DIR}/customers.csv",
+        OUTPUT_DIR / "customers.csv",
 
         index=False
 
@@ -86,7 +91,7 @@ def generate_products(n=100):
 
     pd.DataFrame(rows).to_csv(
 
-        f"{OUTPUT_DIR}/products.csv",
+        OUTPUT_DIR / "products.csv",
 
         index=False
 
@@ -123,7 +128,7 @@ def generate_orders(n=2000):
 
     pd.DataFrame(rows).to_csv(
 
-        f"{OUTPUT_DIR}/orders.csv",
+        OUTPUT_DIR / "orders.csv",
 
         index=False
 
@@ -170,7 +175,7 @@ def generate_order_items(n=5000):
 
     pd.DataFrame(rows).to_csv(
 
-        f"{OUTPUT_DIR}/order_items.csv",
+        OUTPUT_DIR / "order_items.csv",
 
         index=False
 
@@ -216,7 +221,7 @@ def generate_payments(n=2000):
 
     pd.DataFrame(rows).to_csv(
 
-        f"{OUTPUT_DIR}/payments.csv",
+        OUTPUT_DIR / "payments.csv",
 
         index=False
 

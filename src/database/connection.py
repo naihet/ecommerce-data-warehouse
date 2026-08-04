@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 
-from src.config import DB_CONFIG
+from src.config.settings import DB_CONFIG
 
 
 def get_engine():

@@ -3,7 +3,7 @@ import logging
 import pandas as pd
 from sqlalchemy import text
 
-from src.utils.db import get_engine
+from src.database.connection import get_engine
 
 logging.basicConfig(
     level=logging.INFO,
