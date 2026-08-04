@@ -1,16 +1,8 @@
-import logging
-
+from src.logging.logger import logger
 import pandas as pd
 from sqlalchemy import text
 
 from src.database.connection import get_engine
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
 
 engine = get_engine()
 

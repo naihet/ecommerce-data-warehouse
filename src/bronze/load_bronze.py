@@ -1,10 +1,11 @@
-from pathlib import Path
 import logging
 import os
 
 import pandas as pd
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+from src.logging.logger import logger
+from src.config.settings import RAW_DIR
 
 # ==========================
 # Load Environment Variables
@@ -18,16 +19,6 @@ DB_PORT = os.getenv("DB_PORT")
 DB_NAME = os.getenv("DB_NAME")
 
 # ==========================
-# Logging
-# ==========================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
-
-# ==========================
 # Database Connection
 # ==========================
 engine = create_engine(
@@ -37,13 +28,13 @@ engine = create_engine(
 # ==========================
 # Data Directory
 # ==========================
-DATA_DIR = Path("data/raw")
+customer_file = RAW_DIR
 
 # ==========================
 # Load Function
 # ==========================
 def load_csv_to_bronze(file_name: str, table_name: str):
-    csv_path = DATA_DIR / file_name
+    csv_path = customer_file / file_name
 
     try:
         logger.info(f"Loading {file_name}")

@@ -3,16 +3,14 @@ import pandas as pd
 import random
 import os
 from pathlib import Path
+from src.logging.logger import logger
+from src.config.settings import RAW_DIR
 
 fake = Faker()
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+RAW_DIR.mkdir(parents=True, exist_ok=True)
 
-OUTPUT_DIR = BASE_DIR / "data" / "raw"
-
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+os.makedirs(RAW_DIR, exist_ok=True)
 
 
 def generate_customers(n=500):
@@ -52,7 +50,7 @@ def generate_customers(n=500):
 
     pd.DataFrame(rows).to_csv(
 
-        OUTPUT_DIR / "customers.csv",
+        RAW_DIR / "customers.csv",
 
         index=False
 
@@ -91,7 +89,7 @@ def generate_products(n=100):
 
     pd.DataFrame(rows).to_csv(
 
-        OUTPUT_DIR / "products.csv",
+        RAW_DIR / "products.csv",
 
         index=False
 
@@ -128,7 +126,7 @@ def generate_orders(n=2000):
 
     pd.DataFrame(rows).to_csv(
 
-        OUTPUT_DIR / "orders.csv",
+        RAW_DIR / "orders.csv",
 
         index=False
 
@@ -175,7 +173,7 @@ def generate_order_items(n=5000):
 
     pd.DataFrame(rows).to_csv(
 
-        OUTPUT_DIR / "order_items.csv",
+        RAW_DIR / "order_items.csv",
 
         index=False
 
@@ -221,7 +219,7 @@ def generate_payments(n=2000):
 
     pd.DataFrame(rows).to_csv(
 
-        OUTPUT_DIR / "payments.csv",
+        RAW_DIR / "payments.csv",
 
         index=False
 
@@ -242,4 +240,4 @@ if __name__ == "__main__":
     generate_payments()
 
 
-    print("All data generated.")
+    logger.info("All data generated.")
