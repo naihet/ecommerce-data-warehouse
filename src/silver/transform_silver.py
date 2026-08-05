@@ -5,7 +5,7 @@ from sqlalchemy import text
 from src.database.connection import get_engine
 
 from src.common.dataframe import clean_dataframe
-
+from src.common.incremental import get_new_records
 from src.common.validation import (
     validate_not_empty,
     validate_required_columns,
@@ -13,12 +13,18 @@ from src.common.validation import (
     validate_null_primary_key,
 )
 
+
 engine = get_engine()
 
 
 def transform_table(table_name: str):
 
     logger.info(f"Processing {table_name}")
+
+    silver_df = pd.read_sql(
+        f"SELECT * FROM silver.{table_name}",
+        engine
+    )
 
     df = pd.read_sql(
         f"SELECT * FROM bronze.{table_name}",
@@ -91,6 +97,26 @@ def transform_table(table_name: str):
     # ======================
 
     df = clean_dataframe(df)
+
+    pk_map = {
+        "customers": "customer_id",
+        "products": "product_id",
+        "orders": "order_id",
+        "order_items": "order_item_id",
+        "payments": "payment_id",
+    }
+
+    primary_key = pk_map[table_name]
+
+    df = get_new_records(
+        df,
+        silver_df,
+        primary_key,
+    )
+
+    logger.info(
+        f"{len(df)} new records detected."
+    )
 
     # ======================
     # Load to Silver
