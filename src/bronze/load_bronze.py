@@ -1,40 +1,29 @@
-import logging
 import os
 
 import pandas as pd
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from src.logging.logger import logger
 from src.config.settings import RAW_DIR
-
-# ==========================
-# Load Environment Variables
-# ==========================
-load_dotenv()
-
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_NAME = os.getenv("DB_NAME")
+from src.database.connection import get_engine
 
 # ==========================
 # Database Connection
 # ==========================
-engine = create_engine(
-    f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+
+engine = get_engine()
 
 # ==========================
 # Data Directory
 # ==========================
-customer_file = RAW_DIR
+
+data_dir = RAW_DIR
 
 # ==========================
 # Load Function
 # ==========================
 def load_csv_to_bronze(file_name: str, table_name: str):
-    csv_path = customer_file / file_name
+    csv_path = data_dir / file_name
 
     try:
         logger.info(f"Loading {file_name}")
@@ -57,7 +46,9 @@ def load_csv_to_bronze(file_name: str, table_name: str):
         )
 
     except Exception as e:
-        logger.error(e)
+        logger.exception(
+            f"Failed loading {table_name}"
+        )
         raise
 
 
@@ -73,6 +64,8 @@ if __name__ == "__main__":
         "order_items.csv": "order_items",
         "payments.csv": "payments",
     }
+    
+    logger.info("Starting Bronze Pipeline")
 
     for csv_file, table in tables.items():
         load_csv_to_bronze(csv_file, table)
