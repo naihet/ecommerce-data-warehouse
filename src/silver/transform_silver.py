@@ -1,6 +1,7 @@
 from src.logging.logger import logger
 import pandas as pd
 from sqlalchemy import text
+from datetime import datetime
 
 from src.database.connection import get_engine
 
@@ -117,6 +118,12 @@ def transform_table(table_name: str):
     logger.info(
         f"{len(df)} new records detected."
     )
+
+    # ======================
+    # Metadata
+    # ======================
+
+    df["load_timestamp"] = datetime.now()
 
     # ======================
     # Load to Silver
