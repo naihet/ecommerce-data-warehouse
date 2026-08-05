@@ -6,20 +6,25 @@ DROP TABLE IF EXISTS silver.customers CASCADE;
 
 CREATE TABLE silver.customers (
     LIKE bronze.customers INCLUDING ALL
+    load_timestamp TIMESTAMP
 );
 
 CREATE TABLE silver.products (
     LIKE bronze.products INCLUDING ALL
+    load_timestamp TIMESTAMP
 );
 
 CREATE TABLE silver.orders (
     LIKE bronze.orders INCLUDING ALL
+    load_timestamp TIMESTAMP
 );
 
 CREATE TABLE silver.order_items (
     LIKE bronze.order_items INCLUDING ALL
+    load_timestamp TIMESTAMP
 );
 
 CREATE TABLE silver.payments (
     LIKE bronze.payments INCLUDING ALL
+    load_timestamp TIMESTAMP
 );
