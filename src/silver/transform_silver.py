@@ -4,6 +4,8 @@ from sqlalchemy import text
 
 from src.database.connection import get_engine
 
+from src.common.dataframe import clean_dataframe
+
 engine = get_engine()
 
 
@@ -20,9 +22,7 @@ def transform_table(table_name: str):
     # Data Cleaning
     # ======================
 
-    df = df.drop_duplicates()
-
-    df = df.dropna(how="all")
+    df = clean_dataframe(df)
 
     # ======================
     # Load to Silver
