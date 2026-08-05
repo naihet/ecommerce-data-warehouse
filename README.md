@@ -14,25 +14,31 @@ The pipeline generates synthetic transactional data, loads it into PostgreSQL, p
                     Synthetic Data Generator
                               │
                               ▼
-                     CSV Files (data/raw)
+                     CSV Files (Raw Data)
                               │
                               ▼
-                 Bronze Pipeline (Load CSV)
+                    Bronze ETL Pipeline
                               │
                               ▼
-                  PostgreSQL Bronze Schema
+                   PostgreSQL Bronze Layer
                               │
                               ▼
-              Silver Pipeline (Data Cleaning)
+                     Data Validation
                               │
                               ▼
-                  PostgreSQL Silver Schema
+                      Data Cleaning
                               │
                               ▼
-          Gold Layer (Business Analytics) 🚧
+                   PostgreSQL Silver Layer
                               │
                               ▼
-                Dashboard / BI Tools 🚧
+                Incremental Loading (Next)
+                              │
+                              ▼
+                        Gold Layer 🚧
+                              │
+                              ▼
+                      BI Dashboard 🚧
 ```
 
 ---
@@ -58,7 +64,7 @@ The pipeline generates synthetic transactional data, loads it into PostgreSQL, p
 ecommerce-data-warehouse/
 
 ├── config/
-├── dags/
+│
 ├── data/
 │   └── raw/
 │
@@ -68,21 +74,31 @@ ecommerce-data-warehouse/
 │   └── 02_create_silver_tables.sql
 │
 ├── src/
-│   ├── config.py
-│   ├── utils/
-│   │   └── db.py
-│   │
-│   ├── pipelines/
-│   │   ├── bronze/
-│   │   │   └── load_bronze.py
-│   │   │
-│   │   └── silver/
-│   │       └── transform_silver.py
-│   │
-│   └── generate_data.py
 │
-├── docker-compose.yml
+│   ├── bronze/
+│   │   └── load_bronze.py
+│   │
+│   ├── silver/
+│   │   └── transform_silver.py
+│   │
+│   ├── generators/
+│   │   └── generate_sample_data.py
+│   │
+│   ├── database/
+│   │   └── connection.py
+│   │
+│   ├── common/
+│   │   ├── dataframe.py
+│   │   └── validation.py
+│   │
+│   ├── logging/
+│   │   └── logger.py
+│   │
+│   └── config/
+│       └── settings.py
+│
 ├── requirements.txt
+├── docker-compose.yml
 └── README.md
 ```
 
@@ -202,6 +218,10 @@ Gold (Coming Soon)
 | Database Schema | ✅ Completed |
 | Bronze Pipeline | ✅ Completed |
 | Silver Pipeline | ✅ Completed |
+| Configuration Refactor | ✅ Completed |
+| Production Logging | ✅ Completed |
+| Reusable Cleaning Utilities | ✅ Completed |
+| SData Validation | ✅ Completed |
 | Gold Layer | 🚧 In Progress |
 | Airflow | 🚧 Planned |
 | Dashboard | 🚧 Planned |
@@ -210,15 +230,15 @@ Gold (Coming Soon)
 
 # Future Improvements
 
-- Data Quality Validation
 - Incremental Loading
+- Slowly Changing Dimension (SCD Type 2)
 - Gold Aggregation Layer
 - Apache Airflow Orchestration
-- Data Lineage
-- Logging Enhancement
+- Data Quality Dashboard
 - Unit Testing
 - Dockerized ETL Pipeline
 - BI Dashboard (Power BI / Metabase)
+- GitHub Actions CI/CD
 
 ---
 
@@ -234,3 +254,7 @@ This project demonstrates practical experience in
 - Docker
 - Data Warehouse Design
 - Data Engineering Best Practices
+- Production Logging
+- Data Validation
+- Configuration Management
+- Reusable ETL Components
