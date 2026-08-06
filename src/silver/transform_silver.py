@@ -14,6 +14,7 @@ from src.common.validation import (
     validate_null_primary_key,
 )
 
+from src.common.loaders import load_dataframe
 
 engine = get_engine()
 
@@ -134,12 +135,11 @@ def transform_table(table_name: str):
             text(f"TRUNCATE TABLE silver.{table_name};")
         )
 
-    df.to_sql(
-        table_name,
-        engine,
+    load_dataframe(
+        df=df,
+        engine=engine,
+        table_name=table_name,
         schema="silver",
-        if_exists="append",
-        index=False
     )
 
     logger.info(
