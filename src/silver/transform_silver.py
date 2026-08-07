@@ -100,6 +100,21 @@ def transform_table(table_name: str):
 
     df = clean_dataframe(df)
 
+    # ======================
+    # Data Type Conversion
+    # ======================
+
+    if table_name == "customers":
+
+        df["signup_date"] = pd.to_datetime(
+            df["signup_date"],
+            errors="coerce",
+        ).dt.date
+
+    # ======================
+    # Incremental Detection
+    # ======================
+
     pk_map = {
         "customers": "customer_id",
         "products": "product_id",
@@ -119,6 +134,14 @@ def transform_table(table_name: str):
     logger.info(
         f"{len(df)} new records detected."
     )
+
+    if df.empty:
+
+        logger.info(
+            f"{table_name}: No new records."
+        )
+
+        return
 
     # ======================
     # Metadata
