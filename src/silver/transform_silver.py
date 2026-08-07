@@ -130,11 +130,6 @@ def transform_table(table_name: str):
     # Load to Silver
     # ======================
 
-    with engine.begin() as conn:
-        conn.execute(
-            text(f"TRUNCATE TABLE silver.{table_name};")
-        )
-
     load_dataframe(
         df=df,
         engine=engine,
