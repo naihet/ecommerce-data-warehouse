@@ -15,6 +15,7 @@ from src.common.validation import (
 )
 
 from src.common.loaders import load_dataframe
+from src.common.audit import log_pipeline_run
 
 engine = get_engine()
 
@@ -22,6 +23,8 @@ engine = get_engine()
 def transform_table(table_name: str):
 
     logger.info(f"Processing {table_name}")
+
+    started_at = datetime.now()
 
     silver_df = pd.read_sql(
         f"SELECT * FROM silver.{table_name}",
@@ -32,6 +35,8 @@ def transform_table(table_name: str):
         f"SELECT * FROM bronze.{table_name}",
         engine
     )
+
+    source_rows = len(df)
 
     # ======================
     # Data Validation
@@ -137,6 +142,18 @@ def transform_table(table_name: str):
 
     if df.empty:
 
+        completed_at = datetime.now()
+
+        log_pipeline_run(
+            engine=engine,
+            table_name=table_name,
+            source_rows=source_rows,
+            processed_rows=0,
+            started_at=started_at,
+            completed_at=completed_at,
+            status="SUCCESS",
+        )
+
         logger.info(
             f"{table_name}: No new records."
         )
@@ -158,6 +175,18 @@ def transform_table(table_name: str):
         engine=engine,
         table_name=table_name,
         schema="silver",
+    )
+
+    completed_at = datetime.now()
+
+    log_pipeline_run(
+        engine=engine,
+        table_name=table_name,
+        source_rows=source_rows,
+        processed_rows=len(df),
+        started_at=started_at,
+        completed_at=completed_at,
+        status="SUCCESS",
     )
 
     logger.info(
