@@ -1,20 +1,22 @@
+import uuid
 import pandas as pd
-
+from sqlalchemy import text
 
 def load_dataframe(
-    df: pd.DataFrame,
+    df,
     engine,
-    table_name: str,
-    schema: str,
+    table_name,
+    schema,
 ):
-    """
-    Load dataframe into PostgreSQL.
-    """
+
+    temp_table = f"temp_{uuid.uuid4().hex[:8]}"
 
     df.to_sql(
-        table_name,
+        temp_table,
         engine,
         schema=schema,
-        if_exists="append",
+        if_exists="replace",
         index=False,
     )
+
+    print(temp_table)
