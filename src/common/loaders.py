@@ -10,7 +10,6 @@ PRIMARY_KEYS = {
     "payments": "payment_id",
 }
 
-
 def load_dataframe(
     df: pd.DataFrame,
     engine,
@@ -30,7 +29,6 @@ def load_dataframe(
         # ==============================
 
         with engine.begin() as conn:
-
             conn.execute(
                 text(
                     f"""
@@ -53,13 +51,28 @@ def load_dataframe(
         )
 
         # ==============================
-        # 3. Insert new records
+        # 3. Build UPDATE columns
         # ==============================
+
+        update_columns = [
+            column
+            for column in df.columns
+            if column != primary_key
+        ]
+
+        update_clause = ", ".join(
+            f'"{column}" = EXCLUDED."{column}"'
+            for column in update_columns
+        )
 
         columns = ", ".join(
             f'"{column}"'
             for column in df.columns
         )
+
+        # ==============================
+        # 4. UPSERT
+        # ==============================
 
         query = text(
             f"""
@@ -67,28 +80,28 @@ def load_dataframe(
             ({columns})
             SELECT {columns}
             FROM staging.{staging_table}
+
             ON CONFLICT ({primary_key})
-            DO NOTHING;
+            DO UPDATE SET
+                {update_clause};
             """
         )
 
         with engine.begin() as conn:
-
             result = conn.execute(query)
 
         print(
             f"{table_name}: "
-            f"Inserted {result.rowcount} new rows"
+            f"Upserted {result.rowcount} rows"
         )
 
     finally:
 
         # ==============================
-        # 4. Remove staging table
+        # 5. Remove staging
         # ==============================
 
         with engine.begin() as conn:
-
             conn.execute(
                 text(
                     f"""
