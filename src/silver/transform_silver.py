@@ -26,121 +26,179 @@ def transform_table(table_name: str):
 
     started_at = datetime.now()
 
-    silver_df = pd.read_sql(
-        f"SELECT * FROM silver.{table_name}",
-        engine
-    )
+    source_rows = 0
+    processed_rows = 0
 
-    df = pd.read_sql(
-        f"SELECT * FROM bronze.{table_name}",
-        engine
-    )
+    try:
 
-    source_rows = len(df)
+        silver_df = pd.read_sql(
+            f"SELECT * FROM silver.{table_name}",
+            engine
+        )
 
-    # ======================
-    # Data Validation
-    # ======================
+        df = pd.read_sql(
+            f"SELECT * FROM bronze.{table_name}",
+            engine
+        )
 
-    validate_not_empty(df)
+        source_rows = len(df)
 
-    if table_name == "customers":
+        # ======================
+        # Data Validation
+        # ======================
 
-        validate_required_columns(
-            df,
-            [
+        validate_not_empty(df)
+
+        # --------------------------------
+        # customers
+        # --------------------------------
+
+        if table_name == "customers":
+
+            validate_required_columns(
+                df,
+                [
+                    "customer_id",
+                    "customer_name",
+                    "gender",
+                    "province",
+                    "signup_date",
+                ],
+            )
+
+            validate_primary_key(
+                df,
                 "customer_id",
-                "customer_name",
-                "gender",
-                "province",
-                "signup_date",
-            ],
+            )
+
+            validate_null_primary_key(
+                df,
+                "customer_id",
+            )
+
+        # --------------------------------
+        # Other tables
+        # --------------------------------
+
+        if table_name == "products":
+
+            validate_primary_key(
+                df,
+                "product_id",
+            )
+
+        if table_name == "orders":
+
+            validate_primary_key(
+                df,
+                "order_id",
+            )
+
+        if table_name == "order_items":
+
+            validate_primary_key(
+                df,
+                "order_item_id",
+            )
+
+        if table_name == "payments":
+
+            validate_primary_key(
+                df,
+                "payment_id",
+            )
+
+        logger.info(
+            f"{table_name} validation passed."
         )
 
-        validate_primary_key(
+        # ======================
+        # Data Cleaning
+        # ======================
+
+        df = clean_dataframe(df)
+
+        # ======================
+        # Data Type Conversion
+        # ======================
+
+        if table_name == "customers":
+
+            df["signup_date"] = pd.to_datetime(
+                df["signup_date"],
+                errors="coerce",
+            ).dt.date
+
+        # ======================
+        # Incremental Detection
+        # ======================
+
+        pk_map = {
+            "customers": "customer_id",
+            "products": "product_id",
+            "orders": "order_id",
+            "order_items": "order_item_id",
+            "payments": "payment_id",
+        }
+
+        primary_key = pk_map[table_name]
+
+        df = get_new_records(
             df,
-            "customer_id",
+            silver_df,
+            primary_key,
         )
 
-        validate_null_primary_key(
-            df,
-            "customer_id",
+        processed_rows = len(df)
+
+        logger.info(
+            f"{processed_rows} new records detected."
         )
 
-    if table_name == "products":
+        # ======================
+        # No New Records
+        # ======================
 
-        validate_primary_key(
-            df,
-            "product_id",
+        if df.empty:
+
+            completed_at = datetime.now()
+
+            log_pipeline_run(
+                engine=engine,
+                table_name=table_name,
+                source_rows=source_rows,
+                processed_rows=0,
+                started_at=started_at,
+                completed_at=completed_at,
+                status="SUCCESS",
+            )
+
+            logger.info(
+                f"{table_name}: No new records."
+            )
+
+            return
+
+        # ======================
+        # Metadata
+        # ======================
+
+        df["load_timestamp"] = datetime.now()
+
+        # ======================
+        # Load to Silver
+        # ======================
+
+        load_dataframe(
+            df=df,
+            engine=engine,
+            table_name=table_name,
+            schema="silver",
         )
 
-    if table_name == "orders":
-
-        validate_primary_key(
-            df,
-            "order_id",
-        )
-
-    if table_name == "order_items":
-
-        validate_primary_key(
-            df,
-            "order_item_id",
-        )
-
-    if table_name == "payments":
-
-        validate_primary_key(
-            df,
-            "payment_id",
-        )
-
-    logger.info(
-        f"{table_name} validation passed."
-    )
-
-    # ======================
-    # Data Cleaning
-    # ======================
-
-    df = clean_dataframe(df)
-
-    # ======================
-    # Data Type Conversion
-    # ======================
-
-    if table_name == "customers":
-
-        df["signup_date"] = pd.to_datetime(
-            df["signup_date"],
-            errors="coerce",
-        ).dt.date
-
-    # ======================
-    # Incremental Detection
-    # ======================
-
-    pk_map = {
-        "customers": "customer_id",
-        "products": "product_id",
-        "orders": "order_id",
-        "order_items": "order_item_id",
-        "payments": "payment_id",
-    }
-
-    primary_key = pk_map[table_name]
-
-    df = get_new_records(
-        df,
-        silver_df,
-        primary_key,
-    )
-
-    logger.info(
-        f"{len(df)} new records detected."
-    )
-
-    if df.empty:
+        # ======================
+        # SUCCESS AUDIT
+        # ======================
 
         completed_at = datetime.now()
 
@@ -148,51 +206,41 @@ def transform_table(table_name: str):
             engine=engine,
             table_name=table_name,
             source_rows=source_rows,
-            processed_rows=0,
+            processed_rows=processed_rows,
             started_at=started_at,
             completed_at=completed_at,
             status="SUCCESS",
         )
 
         logger.info(
-            f"{table_name}: No new records."
+            f"Loaded {processed_rows} rows "
+            f"into silver.{table_name}"
         )
 
-        return
+    except Exception as e:
 
-    # ======================
-    # Metadata
-    # ======================
+        # ======================
+        # FAILED AUDIT
+        # ======================
 
-    df["load_timestamp"] = datetime.now()
+        completed_at = datetime.now()
 
-    # ======================
-    # Load to Silver
-    # ======================
+        log_pipeline_run(
+            engine=engine,
+            table_name=table_name,
+            source_rows=source_rows,
+            processed_rows=processed_rows,
+            started_at=started_at,
+            completed_at=completed_at,
+            status="FAILED",
+            error_message=str(e),
+        )
 
-    load_dataframe(
-        df=df,
-        engine=engine,
-        table_name=table_name,
-        schema="silver",
-    )
+        logger.exception(
+            f"{table_name} pipeline failed."
+        )
 
-    completed_at = datetime.now()
-
-    log_pipeline_run(
-        engine=engine,
-        table_name=table_name,
-        source_rows=source_rows,
-        processed_rows=len(df),
-        started_at=started_at,
-        completed_at=completed_at,
-        status="SUCCESS",
-    )
-
-    logger.info(
-        f"Loaded {len(df)} rows into silver.{table_name}"
-    )
-
+        raise
 
 if __name__ == "__main__":
 

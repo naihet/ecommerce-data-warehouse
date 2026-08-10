@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS audit.pipeline_runs (
     processed_rows INTEGER NOT NULL,
     started_at TIMESTAMP NOT NULL,
     completed_at TIMESTAMP,
-    status VARCHAR(20) NOT NULL
+    status VARCHAR(20) NOT NULL,
+    error_message TEXT
 );

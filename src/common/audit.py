@@ -11,6 +11,7 @@ def log_pipeline_run(
     started_at: datetime,
     completed_at: datetime,
     status: str,
+    error_message: str | None = None,
 ):
 
     query = text(
@@ -21,7 +22,8 @@ def log_pipeline_run(
             processed_rows,
             started_at,
             completed_at,
-            status
+            status,
+            error_message
         )
         VALUES (
             :table_name,
@@ -29,7 +31,8 @@ def log_pipeline_run(
             :processed_rows,
             :started_at,
             :completed_at,
-            :status
+            :status,
+            :error_message
         )
         """
     )
@@ -45,5 +48,6 @@ def log_pipeline_run(
                 "started_at": started_at,
                 "completed_at": completed_at,
                 "status": status,
+                "error_message": error_message,
             },
         )
