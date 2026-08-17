@@ -8,7 +8,6 @@ from src.logging.logger import logger
 
 engine = get_engine()
 
-
 def transform_daily_sales():
 
     logger.info("Processing gold.daily_sales")
@@ -93,10 +92,103 @@ def transform_daily_sales():
         "gold.daily_sales transformation completed."
     )
 
+#==================================
+
+def transform_product_sales():
+
+    logger.info("Processing gold.product_sales")
+
+    query = text(
+        """
+        INSERT INTO gold.product_sales (
+            product_id,
+            product_name,
+            category,
+            total_quantity,
+            total_sales,
+            order_count,
+            load_timestamp
+        )
+
+        SELECT
+            p.product_id,
+
+            p.product_name,
+
+            p.category,
+
+            COALESCE(
+                SUM(oi.quantity),
+                0
+            ) AS total_quantity,
+
+            COALESCE(
+                SUM(oi.total_price),
+                0
+            ) AS total_sales,
+
+            COUNT(DISTINCT oi.order_id) AS order_count,
+
+            :load_timestamp AS load_timestamp
+
+        FROM silver.products p
+
+        INNER JOIN silver.order_items oi
+            ON p.product_id = oi.product_id
+
+        INNER JOIN silver.orders o
+            ON oi.order_id = o.order_id
+
+        WHERE o.status != 'cancelled'
+
+        GROUP BY
+            p.product_id,
+            p.product_name,
+            p.category
+
+        ON CONFLICT (product_id)
+        DO UPDATE SET
+
+            product_name =
+                EXCLUDED.product_name,
+
+            category =
+                EXCLUDED.category,
+
+            total_quantity =
+                EXCLUDED.total_quantity,
+
+            total_sales =
+                EXCLUDED.total_sales,
+
+            order_count =
+                EXCLUDED.order_count,
+
+            load_timestamp =
+                EXCLUDED.load_timestamp;
+        """
+    )
+
+    with engine.begin() as conn:
+
+        conn.execute(
+            query,
+            {
+                "load_timestamp": datetime.now()
+            }
+        )
+
+    logger.info(
+        "gold.product_sales transformation completed."
+    )
+
+#==================================
 
 if __name__ == "__main__":
 
     transform_daily_sales()
+
+    transform_product_sales()
 
     logger.info(
         "Gold pipeline finished successfully."
