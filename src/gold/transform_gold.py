@@ -184,12 +184,117 @@ def transform_product_sales():
 
 #==================================
 
+def transform_customer_sales():
+
+    logger.info("Processing gold.customer_sales")
+
+    query = text(
+        """
+        INSERT INTO gold.customer_sales (
+            customer_id,
+            customer_name,
+            province,
+            order_count,
+            total_items,
+            total_sales,
+            average_order_value,
+            load_timestamp
+        )
+
+        SELECT
+            c.customer_id,
+
+            c.customer_name,
+
+            c.province,
+
+            COUNT(DISTINCT o.order_id) AS order_count,
+
+            COALESCE(
+                SUM(oi.quantity),
+                0
+            ) AS total_items,
+
+            COALESCE(
+                SUM(oi.total_price),
+                0
+            ) AS total_sales,
+
+            COALESCE(
+                SUM(oi.total_price)
+                / NULLIF(
+                    COUNT(DISTINCT o.order_id),
+                    0
+                ),
+                0
+            ) AS average_order_value,
+
+            :load_timestamp AS load_timestamp
+
+        FROM silver.customers c
+
+        INNER JOIN silver.orders o
+            ON c.customer_id = o.customer_id
+
+        INNER JOIN silver.order_items oi
+            ON o.order_id = oi.order_id
+
+        WHERE o.status != 'cancelled'
+
+        GROUP BY
+            c.customer_id,
+            c.customer_name,
+            c.province
+
+        ON CONFLICT (customer_id)
+        DO UPDATE SET
+
+            customer_name =
+                EXCLUDED.customer_name,
+
+            province =
+                EXCLUDED.province,
+
+            order_count =
+                EXCLUDED.order_count,
+
+            total_items =
+                EXCLUDED.total_items,
+
+            total_sales =
+                EXCLUDED.total_sales,
+
+            average_order_value =
+                EXCLUDED.average_order_value,
+
+            load_timestamp =
+                EXCLUDED.load_timestamp;
+        """
+    )
+
+    with engine.begin() as conn:
+
+        conn.execute(
+            query,
+            {
+                "load_timestamp": datetime.now()
+            }
+        )
+
+    logger.info(
+        "gold.customer_sales transformation completed."
+    )
+
+#==================================
+
 if __name__ == "__main__":
 
     transform_daily_sales()
 
     transform_product_sales()
 
+    transform_customer_sales()
+    
     logger.info(
         "Gold pipeline finished successfully."
     )
