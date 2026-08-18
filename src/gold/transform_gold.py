@@ -287,6 +287,79 @@ def transform_customer_sales():
 
 #==================================
 
+def transform_payment_summary():
+
+    logger.info("Processing gold.payment_summary")
+
+    query = text(
+        """
+        INSERT INTO gold.payment_summary (
+            payment_method,
+            payment_status,
+            transaction_count,
+            total_amount,
+            load_timestamp
+        )
+
+        SELECT
+            p.payment_method,
+
+            p.payment_status,
+
+            COUNT(DISTINCT p.payment_id)
+                AS transaction_count,
+
+            COALESCE(
+                SUM(oi.total_price),
+                0
+            ) AS total_amount,
+
+            :load_timestamp AS load_timestamp
+
+        FROM silver.payments p
+
+        LEFT JOIN silver.orders o
+            ON p.order_id = o.order_id
+
+        LEFT JOIN silver.order_items oi
+            ON o.order_id = oi.order_id
+
+        GROUP BY
+            p.payment_method,
+            p.payment_status
+
+        ON CONFLICT (
+            payment_method,
+            payment_status
+        )
+        DO UPDATE SET
+
+            transaction_count =
+                EXCLUDED.transaction_count,
+
+            total_amount =
+                EXCLUDED.total_amount,
+
+            load_timestamp =
+                EXCLUDED.load_timestamp;
+        """
+    )
+
+    with engine.begin() as conn:
+
+        conn.execute(
+            query,
+            {
+                "load_timestamp": datetime.now()
+            }
+        )
+
+    logger.info(
+        "gold.payment_summary transformation completed."
+    )
+
+#==================================
+
 if __name__ == "__main__":
 
     transform_daily_sales()
@@ -294,6 +367,8 @@ if __name__ == "__main__":
     transform_product_sales()
 
     transform_customer_sales()
+
+    transform_payment_summary()
     
     logger.info(
         "Gold pipeline finished successfully."
